@@ -1,0 +1,282 @@
+"""Generate the executable Section IX notebook from versioned cell sources."""
+
+from pathlib import Path
+import nbformat as nbf
+
+
+ROOT = Path(__file__).resolve().parents[1]
+NOTEBOOK = ROOT / "benchmarks" / "notebooks" / "section_ix_experiments.ipynb"
+
+
+def code(source):
+    return nbf.v4.new_code_cell(source.strip())
+
+
+cells = [
+    nbf.v4.new_markdown_cell("""# Section IX: numerical examples
+
+Run the cells in order. The default settings are a reproducible **pilot** on
+small synthetic datasets; they are not the publication-scale
+\(T=10000,m=24100\) conformal example. Each numbered experiment writes a JSON
+result, a PDF figure, and a LaTeX table in the benchmark output folders.
+The shared training/calibration cell uses
+disjoint nominal trajectory sets and a fixed sensor mixing matrix."""),
+    code(r'''
+import json
+import sys
+from argparse import Namespace
+from pathlib import Path
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+ROOT = next(path for path in (Path.cwd(), *Path.cwd().parents)
+            if (path / "hierarchical_conformal").is_dir())
+sys.path.insert(0, str(ROOT))
+
+from hierarchical_conformal import (LowLevelDetector, HighLevelDetector,
+    WindowEnsembleDetector, conformal_high_level_delay, conformal_high_level_flags,
+    conformal_threshold, high_level_scores, kth_max, low_level_alarms,
+    low_level_scores, sliding_window_rates)
+from benchmarks.run_all import (aligned_unfiltered_residuals, calibrate, filtered_residuals,
+    measurements_from_deltas, quadratic_distances, validate_args)
+from benchmarks.simulate import attack_measurements, nominal_deltas
+from benchmarks.window_ensemble import (SCENARIOS, default_config, run_ensemble_experiment,
+    save_ensemble_results)
+from benchmarks.application_system_tests import (run_linear_residual_case,
+    run_nonlinear_filtered_residual_case, write_application_figure)
+from benchmarks.output_paths import RESULTS as RESULTS_ROOT, FIGURES, TABLES
+
+RESULTS = RESULTS_ROOT / "section_ix"
+for directory in (RESULTS, FIGURES, TABLES):
+    directory.mkdir(parents=True, exist_ok=True)
+
+def save_json(name, data):
+    path = RESULTS / (name + ".json")
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return path
+
+def save_table(name, headers, rows):
+    columns = "l" + "c" * (len(headers) - 1)
+    lines = [r"\begin{tabular}{" + columns + "}", r"\toprule",
+             " & ".join(headers) + r" \\", r"\midrule"]
+    lines += [" & ".join(str(item) for item in row) + r" \\" for row in rows]
+    lines += [r"\bottomrule", r"\end{tabular}", ""]
+    path = TABLES / (name + ".tex")
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
+
+print("Output root:", ROOT)
+'''),
+    nbf.v4.new_markdown_cell("## Shared nominal training and calibration"),
+    code(r'''
+args = Namespace(seed=7, dim=3, steps=300, n_train=60, m_low=200,
+    m_high=200, n_test=80, k_low=5, window=20, k_high=2,
+    delta1_low=0.9, delta1_high=0.9, ell_low=0, ell_high=0,
+    ridge=1e-5, history=4, hidden=32, filter_order=3,
+    filter_cutoff=0.08, filter_warmup=9, k_ablation_values="1,5,10,20",
+    publication_scale=False)
+validate_args(args)
+rng = np.random.default_rng(args.seed)
+estimator, calibration, artifacts = calibrate(args, rng, return_training_vectors=True)
+low_model = LowLevelDetector(args.k_low, args.delta1_low, ridge=args.ridge).fit(
+    artifacts["train_filtered"], artifacts["cal_low_filtered"])
+high_model = HighLevelDetector(args.window, args.k_high, args.delta1_high).fit(
+    low_model.alarms(artifacts["cal_high_filtered"]))
+np.testing.assert_allclose(low_model.threshold_, calibration.low_threshold)
+np.testing.assert_allclose(high_model.threshold_, calibration.high_threshold)
+nominal_y = measurements_from_deltas(nominal_deltas(
+    args.n_test, args.steps, args.dim, rng, mixing=artifacts["mixing"]))
+d_nom = quadratic_distances(filtered_residuals(nominal_y, estimator, args),
+                            artifacts["center"], artifacts["q_inv"])
+a_nom = low_level_alarms(d_nom, calibration.low_threshold)
+np.testing.assert_array_equal(a_nom, low_model.alarms(
+    filtered_residuals(nominal_y, estimator, args)))
+save_json("calibration", {"settings": vars(args),
+    "low_threshold": calibration.low_threshold,
+    "high_threshold": calibration.high_threshold,
+    "low_rank": calibration.low_rank, "high_rank": calibration.high_rank,
+    "low_delta2": calibration.low_delta2,
+    "high_delta2": calibration.high_delta2,
+    "valid_residual_times": int(d_nom.shape[1])})
+print("Shared calibration complete")
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 1 — low-level conformal validity"),
+    code(r'''
+low_scores = low_level_scores(d_nom, args.k_low)
+alarm_counts = a_nom.sum(axis=1)
+exp1 = {"coverage": float(np.mean(low_scores <= calibration.low_threshold)),
+    "fraction_within_k": float(np.mean(alarm_counts <= args.k_low)),
+    "mean_alarm_rate": float(a_nom.mean()),
+    "p95_alarm_rate": float(np.quantile(a_nom.mean(axis=1), 0.95)),
+    "threshold": calibration.low_threshold, "k": args.k_low,
+    "valid_times": int(d_nom.shape[1])}
+save_json("experiment_1", exp1)
+fig, ax = plt.subplots(figsize=(6.5, 3.5))
+ax.hist(artifacts["scores_low"], bins=25)
+ax.axvline(calibration.low_threshold, color="crimson", label="certificate")
+ax.set(xlabel="k-th maximum residual distance", ylabel="Calibration trajectories")
+ax.legend(); fig.tight_layout(); fig.savefig(FIGURES / "low_level_validity.pdf"); plt.close(fig)
+save_table("low_level_validity", ["Coverage", "Within $k$", "Mean alarm rate"],
+           [[f"{exp1['coverage']:.3f}", f"{exp1['fraction_within_k']:.3f}",
+             f"{exp1['mean_alarm_rate']:.4f}"]])
+print(exp1)
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 2 — high-level alarm-rate calibration"),
+    code(r'''
+high_scores = high_level_scores(a_nom, args.window, args.k_high)
+high_flags = high_scores > calibration.high_threshold
+exp2 = {"high_threshold": calibration.high_threshold,
+    "empirical_coverage": float(np.mean(~high_flags)),
+    "false_alarm_rate": float(np.mean(high_flags)),
+    "mean_score": float(np.mean(high_scores)),
+    "window": args.window, "k_high": args.k_high}
+save_json("experiment_2", exp2)
+fig, ax = plt.subplots(figsize=(6.5, 3.5))
+ax.hist(artifacts["scores_high"], bins=20)
+ax.axvline(calibration.high_threshold, color="crimson", label="certificate")
+ax.set(xlabel="k-th maximum window alarm rate", ylabel="Calibration trajectories")
+ax.legend(); fig.tight_layout(); fig.savefig(FIGURES / "high_level_certificates.pdf"); plt.close(fig)
+save_table("high_level_validity", ["Certificate", "Coverage", "False alarm rate"],
+           [[f"{exp2['high_threshold']:.3f}", f"{exp2['empirical_coverage']:.3f}",
+             f"{exp2['false_alarm_rate']:.3f}"]])
+print(exp2)
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 3 — scenario-based alarm patterns"),
+    code(r'''
+scenario_y = {}
+scenario_distances = {}
+exp3 = {}
+for kind in SCENARIOS:
+    scenario_y[kind] = attack_measurements(nominal_y, kind, rng)
+    d = quadratic_distances(filtered_residuals(scenario_y[kind], estimator, args),
+                            artifacts["center"], artifacts["q_inv"])
+    scenario_distances[kind] = d
+    alarms = low_level_alarms(d, calibration.low_threshold)
+    delays = conformal_high_level_delay(alarms, args.window, args.k_high,
+                                        calibration.high_threshold)
+    detected = delays >= 0
+    exp3[kind] = {"low_detection_rate": float(np.mean(alarms.sum(axis=1) > args.k_low)),
+        "high_detection_rate": float(np.mean(conformal_high_level_flags(
+            alarms, args.window, args.k_high, calibration.high_threshold))),
+        "mean_alarm_rate": float(np.mean(alarms)),
+        "median_high_alarm_index": float(np.median(delays[detected])) if detected.any() else None}
+save_json("experiment_3", exp3)
+names = list(exp3)
+fig, ax = plt.subplots(figsize=(8, 3.5))
+ax.bar(np.arange(len(names)), [exp3[name]["high_detection_rate"] for name in names])
+ax.set_xticks(np.arange(len(names))); ax.set_xticklabels(names, rotation=25, ha="right")
+ax.set(ylabel="High-level detection rate", ylim=(0, 1.05))
+fig.tight_layout(); fig.savefig(FIGURES / "scenario_detection.pdf"); plt.close(fig)
+save_table("scenario_detection", ["Scenario", "Low", "High"],
+    [[name.replace("_", r"\_"), f"{v['low_detection_rate']:.3f}",
+      f"{v['high_detection_rate']:.3f}"] for name, v in exp3.items()])
+print(exp3)
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 4 — ablation of the k-th maximum"),
+    code(r'''
+exp4 = {}
+for k in (1, 5, 10, 20):
+    threshold = conformal_threshold(low_level_scores(artifacts["cal_low_distances"], k),
+                                    calibration.low_rank)
+    nominal_alarms = low_level_alarms(d_nom, threshold)
+    replay_alarms = low_level_alarms(scenario_distances["replay"], threshold)
+    exp4[str(k)] = {"threshold": float(threshold),
+        "nominal_alarm_rate": float(nominal_alarms.mean()),
+        "nominal_trajectory_alarm_rate": float(np.mean(nominal_alarms.sum(axis=1) > k)),
+        "replay_detection_rate": float(np.mean(replay_alarms.sum(axis=1) > k))}
+save_json("experiment_4", exp4)
+fig, ax = plt.subplots(figsize=(6.5, 3.5))
+ks = [int(k) for k in exp4]
+ax.plot(ks, [exp4[str(k)]["replay_detection_rate"] for k in ks], "o-", label="Replay")
+ax.plot(ks, [exp4[str(k)]["nominal_trajectory_alarm_rate"] for k in ks], "s-", label="Nominal")
+ax.set(xlabel="k", ylabel="Trajectory decision rate", ylim=(0, 1.05))
+ax.legend(); fig.tight_layout(); fig.savefig(FIGURES / "k_ablation.pdf"); plt.close(fig)
+save_table("k_ablation", ["$k$", "Certificate", "Nominal alarms", "Replay detection"],
+    [[k, f"{v['threshold']:.3f}", f"{v['nominal_alarm_rate']:.4f}",
+      f"{v['replay_detection_rate']:.3f}"] for k, v in exp4.items()])
+print(exp4)
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 5 — Butterworth filtering"),
+    code(r'''
+exp5 = {}
+for kind, data in [("nominal", nominal_y)] + list(scenario_y.items()):
+    filtered_d = d_nom if kind == "nominal" else scenario_distances[kind]
+    raw = aligned_unfiltered_residuals(data, estimator, args)
+    raw_d = quadratic_distances(raw, artifacts["raw_center"], artifacts["raw_q_inv"])
+    filtered_a = low_level_alarms(filtered_d, calibration.low_threshold)
+    raw_a = low_level_alarms(raw_d, artifacts["raw_low_threshold"])
+    exp5[kind] = {"filtered_alarm_rate": float(filtered_a.mean()),
+        "raw_alarm_rate": float(raw_a.mean()),
+        "filtered_trajectory_rate": float(np.mean(filtered_a.sum(axis=1) > args.k_low)),
+        "raw_trajectory_rate": float(np.mean(raw_a.sum(axis=1) > args.k_low))}
+save_json("experiment_5", exp5)
+names = list(exp5)
+x = np.arange(len(names))
+fig, ax = plt.subplots(figsize=(8, 3.5))
+ax.bar(x - .18, [exp5[name]["filtered_trajectory_rate"] for name in names],
+       width=.36, label="Filtered")
+ax.bar(x + .18, [exp5[name]["raw_trajectory_rate"] for name in names],
+       width=.36, label="Unfiltered")
+ax.set_xticks(x); ax.set_xticklabels(names, rotation=25, ha="right")
+ax.set(ylabel="Low-level trajectory decision rate", ylim=(0, 1.05))
+ax.legend(); fig.tight_layout(); fig.savefig(FIGURES / "filtered_vs_unfiltered.pdf"); plt.close(fig)
+save_table("filter_comparison", ["Scenario", "Filtered", "Unfiltered"],
+    [[name.replace("_", r"\_"), f"{v['filtered_trajectory_rate']:.3f}",
+      f"{v['raw_trajectory_rate']:.3f}"] for name, v in exp5.items()])
+print(exp5)
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 6 — window-position hierarchical ensemble"),
+    code(r'''
+ensemble_config = default_config()
+ensemble_config.update(k_low=5, k_high=2, delta1_low=0.9,
+                       delta1_high=0.9, m_low=200, m_high=200, n_test=80)
+exp6 = run_ensemble_experiment(ensemble_config, seed=17)
+save_ensemble_results(exp6, ROOT)
+save_json("experiment_6", exp6)
+print("Nominal voted rates:", exp6["nominal"]["low_vote_rate"],
+      exp6["nominal"]["high_vote_rate"])
+print("Replay voted rates:", exp6["scenarios"]["replay"]["low_vote_rate"],
+      exp6["scenarios"]["replay"]["high_vote_rate"])
+'''),
+    nbf.v4.new_markdown_cell("## Experiment 7 — linear and nonlinear applications"),
+    code(r'''
+app_args = Namespace(seed=17, steps=300, n_train=60, m_calibration=200,
+    n_validation=80, coverage=0.95, delta1=0.9, ridge=1e-6,
+    history=4, hidden=32, filter_order=3, filter_cutoff=0.08,
+    filter_warmup=9, publication_scale=False)
+linear, linear_dist = run_linear_residual_case(app_args, np.random.default_rng(18))
+nonlinear, nonlinear_dist = run_nonlinear_filtered_residual_case(
+    app_args, np.random.default_rng(19))
+exp7 = {"linear_residual": linear, "nonlinear_filtered_residual": nonlinear}
+save_json("experiment_7", exp7)
+write_application_figure(exp7, {"linear_residual": linear_dist,
+                                "nonlinear_filtered_residual": nonlinear_dist})
+save_table("application_summary", ["Application", "Conformal trajectory alarms", "Other measure"],
+    [["Linear", f"{linear['conformal']['trajectory_alarm_rate']:.3f}",
+      f"Chi-square mean violations: {linear['chi_square_baseline']['mean_violations_per_trajectory']:.2f}"],
+     ["Nonlinear", f"{nonlinear['trajectory_alarm_rate']:.3f}",
+      f"Filter energy ratio: {nonlinear['filter_energy_ratio']:.3f}"]])
+print("Linear conformal trajectory alarms:", linear["conformal"]["trajectory_alarm_rate"])
+print("Nonlinear conformal trajectory alarms:", nonlinear["trajectory_alarm_rate"])
+'''),
+    nbf.v4.new_markdown_cell("## Saved outputs"),
+    code(r'''
+manifest = {"mode": "pilot", "seed_baseline": args.seed,
+    "experiment_results": [(RESULTS / f"experiment_{j}.json").relative_to(ROOT).as_posix()
+                           for j in range(1, 8)],
+    "figures": [path.relative_to(ROOT).as_posix() for path in sorted(FIGURES.glob("*.pdf"))],
+    "tables": [path.relative_to(ROOT).as_posix() for path in sorted(TABLES.glob("*.tex"))]}
+save_json("manifest", manifest)
+print("Saved", len(manifest["experiment_results"]), "experiment results,",
+      len(manifest["figures"]), "figures, and", len(manifest["tables"]), "tables")
+'''),
+]
+
+notebook = nbf.v4.new_notebook(cells=cells)
+notebook.metadata["kernelspec"] = {"display_name": "Python 3", "language": "python", "name": "python3"}
+notebook.metadata["language_info"] = {"name": "python", "version": "3.8"}
+NOTEBOOK.parent.mkdir(parents=True, exist_ok=True)
+nbf.write(notebook, NOTEBOOK)
+print(NOTEBOOK)

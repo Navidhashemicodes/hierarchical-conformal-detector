@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this toolbox, please cite this software and the accompanying paper when available."
+type: software
+title: "Hierarchical Conformal Detector"
+version: 0.1.0
+authors:
+  - family-names: Hashemi
+    given-names: Navid
+  - family-names: Ruths
+    given-names: Justin
