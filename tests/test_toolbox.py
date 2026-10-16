@@ -5,8 +5,8 @@ import unittest
 import numpy as np
 
 from hierarchical_conformal import (HighLevelDetector, HierarchicalDetector,
-                                    LowLevelDetector, WindowEnsembleDetector,
-                                    kth_max)
+                                    LowLevelDetector, RandomizedWindowDetector,
+                                    WindowEnsembleDetector, kth_max)
 
 
 class ZeroObserver:
@@ -67,6 +67,34 @@ class ToolboxTests(unittest.TestCase):
             scored["low_vote"], scored["branch_low"].sum(axis=0) >= 2)
         np.testing.assert_array_equal(
             scored["high_vote"], scored["branch_high"].sum(axis=0) >= 2)
+
+    def test_randomized_window_detector_returns_single_low_high_decisions(self):
+        rng = np.random.default_rng(6)
+        train, low, high, test = [rng.normal(size=(n, 30, 2))
+                                  for n in (6, 8, 8, 3)]
+        detector = RandomizedWindowDetector(
+            window=3, k_low=2, rate_window=4, k_high=2,
+            observer_factory=lambda position: ZeroObserver(),
+            delta1_low=0.8, delta1_high=0.8, warmup=2, seed=9,
+        ).fit(train, low, high)
+        scored = detector.score(test)
+        self.assertEqual(scored["distances"].shape, (3, 26))
+        self.assertEqual(scored["alarms"].shape, (3, 26))
+        self.assertEqual(scored["low_alarm"].shape, (3,))
+        self.assertEqual(scored["high_alarm"].shape, (3,))
+        np.testing.assert_array_equal(
+            scored["low_alarm"], scored["alarms"].sum(axis=1) > 2)
+        self.assertEqual(len(detector.observers_), 3)
+
+    def test_randomized_window_detector_requires_separate_observers(self):
+        shared = ZeroObserver()
+        data = np.zeros((4, 12, 1))
+        detector = RandomizedWindowDetector(
+            window=3, k_low=1, rate_window=2, k_high=1,
+            observer_factory=lambda position: shared, warmup=1,
+        )
+        with self.assertRaisesRegex(ValueError, "separate observer"):
+            detector.fit(data, data, data)
 
     def test_mismatched_trajectory_geometry_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "same time and sensor dimensions"):

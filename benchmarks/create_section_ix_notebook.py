@@ -19,8 +19,10 @@ The publication design uses \\(T=10000\\), at least 24,100 training
 trajectories, and separate low- and high-level calibration sets of 24,100
 trajectories each. Both levels use \\(\\ell=24098\\) and
 \\(\\delta_1=0.9995\\). The diagnostic notebook is a small pilot and does
-not establish this guarantee. Each numbered experiment writes a JSON
-result, a PDF figure, and a LaTeX table in the benchmark output folders.
+not establish this guarantee. Experiments 1–7 write JSON results, PDF figures,
+and LaTeX tables in the benchmark output folders. Experiment 8 is a planned
+external case study; its status cell records pending work without reporting
+measurements.
 The shared training/calibration cell uses
 disjoint nominal trajectory sets and a fixed sensor mixing matrix."""),
     code(r'''
@@ -318,6 +320,7 @@ calibration trajectories."""),
     code(r'''
 with (ROOT / "results" / "section_ix" / "experiment_8.json").open(encoding="utf-8") as stream:
     codit_gait_status = json.load(stream)
+save_json("experiment_8", codit_gait_status)
 print("Experiment 8 status:", codit_gait_status["status"])
 print("Published CoDiT AUROCs:", codit_gait_status["codit_reference"]["published_auroc"])
 print("Our detector AUROCs:", codit_gait_status["hierarchical_detector"]["auroc"])
@@ -329,7 +332,7 @@ manifest = {"mode": "publication_design" if PUBLICATION_SCALE else "pilot",
     "ensemble_settings": ensemble_config, "application_settings": vars(app_args),
     "experiment_results": [(RESULTS / f"experiment_{j}.json").relative_to(ROOT).as_posix()
                            for j in range(1, 9)],
-    "experiment_8_status": "pending_shared_subject_split_run",
+    "experiment_status": {"8": codit_gait_status["status"]},
     "figures": [path.relative_to(ROOT).as_posix() for path in sorted(FIGURES.glob("*.pdf"))],
     "tables": [path.relative_to(ROOT).as_posix() for path in sorted(TABLES.glob("*.tex"))]}
 save_json("manifest", manifest)

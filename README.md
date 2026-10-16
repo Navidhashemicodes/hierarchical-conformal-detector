@@ -2,9 +2,10 @@
 
 A Python toolbox for anomaly detection in multivariate trajectories. It
 combines a neural observer, a trajectory-level `k`-th-maximum residual score,
-and a conformal monitor of sliding-window alarm rates. A window ensemble can
-train one observer for each omitted position in a measurement window and vote
-separately at the low and high levels.
+and a conformal monitor of sliding-window alarm rates. The paper's temporal
+extension trains one observer for each omitted window position, samples one
+observer uniformly at each time step, and calibrates a single detector on the
+resulting randomized residual stream.
 
 The reusable code is in `hierarchical_conformal/`. The paper's simulations,
 application cases, plots, and executable notebooks are in `benchmarks/`.
@@ -51,27 +52,29 @@ model with ridge-fitted output weights. Pass a custom observer implementing
 use another estimator. If the observer is already fitted, `predict_flat(X)`
 alone is sufficient. `X` holds past measurements, newest first.
 
-For temporal behavior detection, fit one observer for each omitted window
-position:
+For temporal behavior detection with per-time-step uniform observer sampling:
 
 ```python
-from hierarchical_conformal import WindowEnsembleDetector
+from hierarchical_conformal import RandomizedWindowDetector
 
-ensemble = WindowEnsembleDetector(
+detector = RandomizedWindowDetector(
     window=5, k_low=5, rate_window=5, k_high=2,
     delta1_low=0.9, delta1_high=0.9,
 )
-ensemble.fit(train_nominal, low_calibration, high_calibration)
-low_votes, high_votes = ensemble.predict(test_trajectories)
-branch_results = ensemble.score(test_trajectories)
+detector.fit(train_nominal, low_calibration, high_calibration)
+scores = detector.score(test_trajectories)
+low_flags, high_flags = scores["low_alarm"], scores["high_alarm"]
 ```
 
 Pass `observer_factory(position)` to construct your own observer for each
-position. `LowLevelDetector` accepts training and calibration residual vectors
-directly; `HighLevelDetector` accepts calibration binary alarm streams. The
-public `kth_max`, `conformal_rank`, `confidence_rank`, and
-`beta_confidence` functions support lower-level integrations. See class
-docstrings for all parameters and returned arrays.
+omitted position. `WindowEnsembleDetector` remains available for applications
+that explicitly want observer-specific calibration and majority voting; that
+is a different decision rule from the paper's randomized temporal extension.
+`LowLevelDetector` accepts training and calibration residual vectors directly;
+`HighLevelDetector` accepts calibration binary alarm streams. The public
+`kth_max`, `conformal_rank`, `confidence_rank`, and `beta_confidence` functions
+support lower-level integrations. See class docstrings for parameters and
+returned arrays.
 
 ## Interpretation and assumptions
 
@@ -84,10 +87,12 @@ need to be independent. Nominal calibration and test trajectories must be
 exchangeable for the conformal statements to apply.
 
 The two calibration splits are separate because the high-level split is
-scored using a fixed low-level threshold. The stated conformal certificate
-applies to each calibrated branch. Majority votes across shared measurements
-do not inherit a branchwise false-alarm certificate automatically. For an
-omitted-position observer, a score becomes available when its full window has
+scored using a fixed low-level threshold. In `RandomizedWindowDetector`, each
+trajectory receives fresh observer draws during calibration and testing, so
+the certificates are marginal over both nominal trajectories and observer
+randomization. `WindowEnsembleDetector` is a separate majority-vote method;
+its votes do not inherit branchwise false-alarm certificates automatically.
+An omitted-position prediction becomes available after its full window has
 been observed.
 
 `delta1` is the target nominal trajectory coverage conditional on calibration.

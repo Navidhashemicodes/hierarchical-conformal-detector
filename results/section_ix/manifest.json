@@ -1,43 +1,24 @@
 {
-  "mode": "publication_design_partial",
-  "seed_baseline": 7,
-  "experiment_results": [
-    "results/section_ix/experiment_1.json",
-    "results/section_ix/experiment_2.json",
-    "results/section_ix/experiment_3.json",
-    "results/section_ix/experiment_4.json",
-    "results/section_ix/experiment_5.json",
-    "results/section_ix/experiment_6.json",
-    "results/section_ix/experiment_7.json",
-    "results/section_ix/experiment_8.json"
-  ],
-  "figures": [
-    "paper/figures/application_linear_nonlinear.pdf",
-    "paper/figures/filtered_vs_unfiltered.pdf",
-    "paper/figures/high_level_certificates.pdf",
-    "paper/figures/k_ablation.pdf",
-    "paper/figures/low_level_validity.pdf",
-    "paper/figures/scenario_detection.pdf",
-    "paper/figures/window_ensemble.pdf"
-  ],
-  "tables": [
-    "paper/tables/application_summary.tex",
-    "paper/tables/filter_comparison.tex",
-    "paper/tables/high_level_validity.tex",
-    "paper/tables/k_ablation.tex",
-    "paper/tables/low_level_validity.tex",
-    "paper/tables/scenario_detection.tex",
-    "paper/tables/window_ensemble.tex",
-    "paper/tables/codit_gait.tex"
-  ],
-  "experiment_status": {
-    "1": "publication_results_available",
-    "2": "publication_results_available",
-    "3": "publication_results_available",
-    "4": "publication_results_available",
-    "5": "publication_results_available",
-    "6": "pending_publication_scale_run",
-    "7": "pending_publication_scale_run",
-    "8": "pending_shared_subject_split_run"
-  }
+    "mode":  "toolbox_public_snapshot",
+    "experiment_results":  [
+                               "results/section_ix/experiment_1.json",
+                               "results/section_ix/experiment_2.json",
+                               "results/section_ix/experiment_3.json",
+                               "results/section_ix/experiment_4.json",
+                               "results/section_ix/experiment_5.json",
+                               "results/section_ix/experiment_6.json",
+                               "results/section_ix/experiment_7.json",
+                               "results/section_ix/experiment_8.json"
+                           ],
+    "experiment_status":  {
+                              "1":  "publication_results_available",
+                              "2":  "publication_results_available",
+                              "3":  "publication_results_available",
+                              "4":  "publication_results_available",
+                              "5":  "publication_results_available",
+                              "6":  "pending_publication_scale_run",
+                              "7":  "pilot_only_pending_publication_scale_run",
+                              "8":  "pending_shared_subject_split_run"
+                          },
+    "note":  "The manuscript and its figures/tables are not included. Regenerated benchmark figures and tables are written under benchmarks/outputs."
 }

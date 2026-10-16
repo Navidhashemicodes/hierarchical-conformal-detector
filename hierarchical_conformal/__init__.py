@@ -5,7 +5,9 @@ within a trajectory may be dependent. See README.md for the precise scope of
 the branchwise conformal certificates.
 """
 
-from .detectors import HighLevelDetector, HierarchicalDetector, LowLevelDetector, WindowEnsembleDetector
+from .detectors import (HighLevelDetector, HierarchicalDetector, LowLevelDetector,
+                        RandomizedWindowDetector, WindowEnsembleDetector,
+                        randomized_window_residuals)
 from .estimators import (RandomFeatureObserver, RandomReluEstimator, fit_random_relu,
                          history_dataset, residual_trajectories, train_random_relu_estimator)
 from .utils import (CalibrationSummary, beta_confidence, butterworth_lowpass,
@@ -17,7 +19,9 @@ from .utils import (CalibrationSummary, beta_confidence, butterworth_lowpass,
 
 __all__ = [
     "LowLevelDetector", "HighLevelDetector", "HierarchicalDetector",
-    "WindowEnsembleDetector", "RandomFeatureObserver", "RandomReluEstimator",
+    "RandomizedWindowDetector", "WindowEnsembleDetector",
+    "randomized_window_residuals",
+    "RandomFeatureObserver", "RandomReluEstimator",
     "kth_max", "conformal_rank", "confidence_rank", "beta_confidence",
     "conformal_threshold",
     "fit_random_relu", "history_dataset", "residual_trajectories",

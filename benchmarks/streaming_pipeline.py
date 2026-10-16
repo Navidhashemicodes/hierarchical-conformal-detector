@@ -7,7 +7,7 @@ from hierarchical_conformal import (CalibrationSummary, HighLevelDetector,
     LowLevelDetector,
     beta_confidence, butterworth_lowpass, conformal_high_level_delay,
     conformal_rank, conformal_threshold, high_level_scores, kth_max, sliding_window_rates,
-    trim_filter_warmup)
+    randomized_window_residuals, trim_filter_warmup)
 from benchmarks.run_all import filter_warmup as effective_filter_warmup, quadratic_distances
 from benchmarks.simulate import make_mixing_matrix
 from benchmarks.streaming import (accumulate_shape, fit_random_relu_streaming,
@@ -208,21 +208,9 @@ def randomized_window_vectors(measurements, observers, config, rng):
     the randomized residual stream itself rather than a switch among already
     filtered branch streams.
     """
-    values = np.asarray(measurements, dtype=float)
-    n = len(values)
-    steps = values.shape[1] - config["window"] + 1
-    choices = rng.integers(0, len(observers), size=(n, steps))
-    selected = np.empty((n, steps, values.shape[2]), dtype=float)
-    # Materialize one candidate stream at a time to keep memory bounded as W grows.
-    for position, observer in enumerate(observers):
-        use = choices == position
-        if np.any(use):
-            candidate = _window_raw_vectors(
-                values, observer, config["window"], position)
-            selected[use] = candidate[use]
-    filtered = butterworth_lowpass(
-        selected, config["filter_cutoff"], config["filter_order"])
-    return trim_filter_warmup(filtered, config["warmup"]), choices
+    return randomized_window_residuals(
+        measurements, observers, config["window"], config["filter_cutoff"],
+        config["filter_order"], config["warmup"], rng)
 
 
 def _window_training_shape(config, seed, mixing, observer, position):

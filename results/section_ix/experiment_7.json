@@ -1,4 +1,5 @@
 {
+  "status": "pilot_only_pending_publication_scale_run",
   "linear_residual": {
     "distance_source": "linear observer residual, as in the notebook and conference low-level detector",
     "score": "r_t^T Q^{-1} r_t",

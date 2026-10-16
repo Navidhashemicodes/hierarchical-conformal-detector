@@ -13,7 +13,7 @@ profile.add_argument(
 )
 profile.add_argument(
     "--publication-scale", action="store_true",
-    help="run all seven experiments with T=10000 and at least 24100 training trajectories",
+    help="run computational Experiments 1-7 at publication scale; Experiment 8 status is reported separately",
 )
 options = parser.parse_args()
 
