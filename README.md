@@ -99,19 +99,24 @@ marginal conformal rank. A requested high-confidence rank can be found with
 ## Reproduce the paper benchmarks
 
 ```powershell
-python -m benchmarks.run_section_ix_notebook
+python -m benchmarks.create_section_ix_notebook
+python -m benchmarks.run_section_ix_notebook --publication-scale
 ```
 
-The notebook is at
-`benchmarks/notebooks/section_ix_experiments.ipynb`. In the standalone
-toolbox it saves JSON results under `benchmarks/outputs/results/section_ix/`,
-figures under `benchmarks/outputs/figures/`, and LaTeX tables under
-`benchmarks/outputs/tables/`. In a manuscript checkout containing
-`paper/main.tex`, it writes to that checkout's `results/` and `paper/`
-folders instead. The checked-in Section IX values are from
-the pilot setting `T=300`, `m_low=m_high=200`. The paper also discusses an
-illustrative `T=10000`, `m=24100` design, which has not been executed here.
-See [benchmarks/README.md](benchmarks/README.md) for benchmark details.
+`benchmarks/notebooks/section_ix_experiments.ipynb` contains the seven
+publication-design experiments (`T=10000`, at least 24,100 training
+trajectories, and 24,100 trajectories in each applicable calibration set).
+Run it with `python -m benchmarks.run_section_ix_notebook --publication-scale`
+using five sequential data batches. The publication run is computationally
+large and may take a long time; it writes the generated results and figures
+into the benchmark output folders.
+The separate `section_ix_pilot.ipynb` uses small datasets and writes only to
+`benchmarks/outputs/pilot/`; its numbers are not paper results. See
+[benchmarks/README.md](benchmarks/README.md) for output locations and run
+details.
+
+For a small implementation check, run
+`python -m benchmarks.run_section_ix_notebook --pilot`.
 
 Run the toolbox tests:
 

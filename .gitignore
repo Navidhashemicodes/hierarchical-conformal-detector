@@ -1,4 +1,4 @@
-# Local environments and Python caches
+# Local Python environments and caches
 .venv/
 venv/
 __pycache__/
@@ -9,4 +9,29 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+
+# Notebook and LaTeX intermediates
 .ipynb_checkpoints/
+paper/build/
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+paper/root.tex
+paper/tac_*.tex
+
+# Local working copies and downloaded reading material
+tmp/
+paper2/
+experiments1/
+/notebooks/
+paper/root.pdf
+/*.pdf
+
+# Historical pilot results remain in the manuscript checkout; new pilot
+# outputs are stored under benchmarks/outputs/pilot/.
+/results/*
+!/results/section_ix/
+
