@@ -10,6 +10,8 @@ __pycache__/
 build/
 dist/
 benchmarks/outputs/
+/benchmarks/external/
+/benchmarks/data/experiment_8/
 
 # Notebook and LaTeX intermediates
 .ipynb_checkpoints/

@@ -20,9 +20,10 @@ trajectories, and separate low- and high-level calibration sets of 24,100
 trajectories each. Both levels use \\(\\ell=24098\\) and
 \\(\\delta_1=0.9995\\). The diagnostic notebook is a small pilot and does
 not establish this guarantee. Experiments 1–7 write JSON results, PDF figures,
-and LaTeX tables in the benchmark output folders. Experiment 8 is a planned
-external case study; its status cell records pending work without reporting
-measurements.
+and LaTeX tables in the benchmark output folders. Experiment 8 launches the
+upstream CoDiT GAIT evaluator and our detector on the same machine and records;
+follow `benchmarks/experiment_8/README.md` to stage its source, data,
+checkpoints, and isolated Python environment.
 The shared training/calibration cell uses
 disjoint nominal trajectory sets and a fixed sensor mixing matrix."""),
     code(r'''
@@ -308,22 +309,36 @@ print("Nonlinear conformal trajectory alarms:", nonlinear["trajectory_alarm_rate
 '''),
     nbf.v4.new_markdown_cell("""## Experiment 8 — CoDiT GAIT case study
 
-The manuscript now specifies an exploratory comparison on the GAIT case
-study used by CoDiT. Its published AUROC reference values are recorded in
-`results/section_ix/experiment_8.json`. This run is intentionally marked
-pending: it requires the PhysioNet GAITND records and the official CoDiT
-implementation, evaluated with the same subject split. The 16 healthy
-subjects do not support the 24,100-trajectory conformal calibration design,
-so this comparison will report AUROC descriptively and will not claim that
-guarantee. Do not substitute windows from the same subject for independent
-calibration trajectories."""),
+This cell launches the downloaded upstream CoDiT evaluator and the proposed
+detector on the same machine, native GAIT records, and CoDiT subject split.
+Follow `benchmarks/experiment_8/README.md` to obtain CoDiT's source and released
+checkpoints and configure its isolated Python environment. This cell downloads
+and extracts the GAIT archive on first use and skips that step when all
+required records are already present. The comparison is descriptive because
+it uses repeated windows from a small number of subjects."""),
     code(r'''
+from benchmarks.run_experiment_8 import (
+    DEFAULT_CODIT, ensure_gait_dataset, run_experiment_8)
+
+codit_root = DEFAULT_CODIT
+data_root = (codit_root / "ours" / "gait" / "data" /
+             "gait-in-neurodegenerative-disease-database-1.0.0")
+checkpoint_dir = codit_root / "ours" / "gait" / "saved_models"
+codit_python = "C:/path/to/conda/envs/gait/python.exe"  # Set to CoDiT's Python
+
+downloaded = ensure_gait_dataset(data_root)
+print("Downloaded GAIT data." if downloaded else "Using existing GAIT data.")
+
+experiment_8 = run_experiment_8(
+    data_root=data_root, codit_root=codit_root,
+    checkpoint_dir=checkpoint_dir,
+    output_dir=ROOT / "benchmarks" / "outputs" / "experiment_8",
+    codit_python=codit_python, n_randomizations=100, seed=1729,
+)
 with (ROOT / "results" / "section_ix" / "experiment_8.json").open(encoding="utf-8") as stream:
-    codit_gait_status = json.load(stream)
-save_json("experiment_8", codit_gait_status)
-print("Experiment 8 status:", codit_gait_status["status"])
-print("Published CoDiT AUROCs:", codit_gait_status["codit_reference"]["published_auroc"])
-print("Our detector AUROCs:", codit_gait_status["hierarchical_detector"]["auroc"])
+    experiment_8["codit_reference"] = json.load(stream)["codit_reference"]
+save_json("experiment_8", experiment_8)
+print(json.dumps(experiment_8, indent=2))
 '''),
     nbf.v4.new_markdown_cell("## Saved outputs"),
     code(r'''
@@ -332,7 +347,7 @@ manifest = {"mode": "publication_design" if PUBLICATION_SCALE else "pilot",
     "ensemble_settings": ensemble_config, "application_settings": vars(app_args),
     "experiment_results": [(RESULTS / f"experiment_{j}.json").relative_to(ROOT).as_posix()
                            for j in range(1, 9)],
-    "experiment_status": {"8": codit_gait_status["status"]},
+    "experiment_status": {"8": experiment_8["status"]},
     "figures": [path.relative_to(ROOT).as_posix() for path in sorted(FIGURES.glob("*.pdf"))],
     "tables": [path.relative_to(ROOT).as_posix() for path in sorted(TABLES.glob("*.tex"))]}
 save_json("manifest", manifest)

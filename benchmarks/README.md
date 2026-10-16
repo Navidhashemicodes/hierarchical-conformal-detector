@@ -4,11 +4,12 @@ The notebooks here call the public `hierarchical_conformal` classes and
 utilities. Synthetic signal generation, attack injection, plotting, and LaTeX
 table export are benchmark code; they are not required by the toolbox.
 
-Generate both notebooks from the repository root after
+Generate the Section IX notebooks from the repository root after
 `pip install -e ".[benchmarks]"`:
 
 ```powershell
 python -m benchmarks.create_section_ix_notebook
+python -m benchmarks.create_experiment_8_notebook
 ```
 
 `benchmarks/notebooks/section_ix_experiments.ipynb` has the paper design in
@@ -23,7 +24,20 @@ diagnostic pilot (`T=300`, 60 training trajectories, and 200 calibration
 trajectories); publication-scale results are pending. Do not interpret those
 pilot values as results from the `T=10000`, 24,100-trajectory design.
 
-Experiment 8 specifies an exploratory comparison with CoDiT on the GAIT case study. Published CoDiT AUROC values are recorded; our detector values remain pending until the PhysioNet GAITND records and official CoDiT implementation are run under a shared subject split. Since the dataset has only 16 healthy subjects, this comparison cannot use the 24,100-independent-trajectory calibration design or claim its conformal guarantee. It must report AUROC as descriptive performance and preserve subject-level separation.
+Experiment 8 is an exploratory comparison with CoDiT on its GAIT case study. The runner invokes the upstream `ours/gait/check_OOD_gait.py` on the same machine and reads the same native 12-feature records for the proposed detector. It follows CoDiT's exact healthy split and severe patient subset and requires the three released GAIT checkpoints. Since the dataset has only 16 healthy subjects, this comparison cannot use the 24,100-independent-trajectory calibration design or claim its conformal guarantee. It reports AUROC as descriptive performance and preserves subject-level separation.
+
+The standalone notebook is `benchmarks/notebooks/experiment_8_codit_gait.ipynb`.
+The Experiment 8 runner is implemented at `benchmarks/run_experiment_8.py`.
+Follow `benchmarks/experiment_8/README.md` to obtain CoDiT's source tree,
+released checkpoints, and isolated runtime. The notebook and command-line
+runner automatically download/extract GAIT data on first use and skip that
+step when the full record set is already present. Then run
+`python -m benchmarks.run_experiment_8 --codit-python <CoDiT Python path>`.
+The runner calls CoDiT directly for W=16,18,20, fits the public
+randomized-window detector on the matching records, aligns both methods by
+subject and raw window index, and saves per-window scores plus AUROC outputs.
+It is descriptive because windows from a subject are dependent. The notebook
+calls this same runner; it does not have a separate Experiment 8 implementation.
 
 The reusable in-memory API for the paper's randomized observer rule is
 `hierarchical_conformal.RandomizedWindowDetector`. Experiment 6 uses a
