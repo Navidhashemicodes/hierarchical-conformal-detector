@@ -1,0 +1,33 @@
+{
+  "settings": {
+    "seed": 7,
+    "dim": 3,
+    "steps": 10000,
+    "n_train": 24100,
+    "m_low": 24100,
+    "m_high": 24100,
+    "n_test": 1000,
+    "k_low": 500,
+    "window": 500,
+    "k_high": 50,
+    "delta1_low": 0.9995,
+    "delta1_high": 0.9995,
+    "ell_low": 24098,
+    "ell_high": 24098,
+    "ridge": 1e-05,
+    "history": 4,
+    "hidden": 32,
+    "filter_order": 3,
+    "filter_cutoff": 0.08,
+    "filter_warmup": 9,
+    "k_ablation_values": "100,250,500,750,1000",
+    "publication_scale": true
+  },
+  "low_threshold": 0.0685483782707734,
+  "high_threshold": 1.0,
+  "low_rank": 24098,
+  "high_rank": 24098,
+  "low_delta2": 0.9995004718623421,
+  "high_delta2": 0.9995004718623421,
+  "valid_residual_times": 9987
+}

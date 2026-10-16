@@ -1,0 +1,56 @@
+{
+  "nominal": {
+    "filtered_alarm_rate": 6.107940322419145e-06,
+    "raw_alarm_rate": 4.105336938019425e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "bias": {
+    "filtered_alarm_rate": 7.409632522278963e-06,
+    "raw_alarm_rate": 3.8049464303594675e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "drift": {
+    "filtered_alarm_rate": 5.607289476319215e-06,
+    "raw_alarm_rate": 4.105336938019425e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "replay": {
+    "filtered_alarm_rate": 0.0007633924101331731,
+    "raw_alarm_rate": 0.0006438369880845099,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "noise_burst": {
+    "filtered_alarm_rate": 6.308200660859117e-06,
+    "raw_alarm_rate": 4.305597276459397e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "surge": {
+    "filtered_alarm_rate": 4.4057274456793835e-06,
+    "raw_alarm_rate": 4.005206768799439e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "clustered": {
+    "filtered_alarm_rate": 6.107940322419145e-06,
+    "raw_alarm_rate": 4.105336938019425e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "zero_alarm": {
+    "filtered_alarm_rate": 0.0,
+    "raw_alarm_rate": 0.0,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  },
+  "hidden_rate": {
+    "filtered_alarm_rate": 6.107940322419145e-06,
+    "raw_alarm_rate": 4.105336938019425e-06,
+    "filtered_trajectory_rate": 0.0,
+    "raw_trajectory_rate": 0.0
+  }
+}

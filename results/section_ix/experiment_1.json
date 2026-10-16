@@ -1,0 +1,9 @@
+{
+  "coverage": 1.0,
+  "fraction_within_k": 1.0,
+  "mean_alarm_rate": 6.107940322419145e-06,
+  "p95_alarm_rate": 0.0,
+  "threshold": 0.0685483782707734,
+  "k": 500,
+  "valid_times": 9987
+}

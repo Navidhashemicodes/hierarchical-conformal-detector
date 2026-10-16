@@ -1,0 +1,50 @@
+{
+  "bias": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 7.409632522278963e-06,
+    "median_high_alarm_index": null
+  },
+  "drift": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 5.607289476319215e-06,
+    "median_high_alarm_index": null
+  },
+  "replay": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 0.0007633924101331731,
+    "median_high_alarm_index": null
+  },
+  "noise_burst": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 6.308200660859117e-06,
+    "median_high_alarm_index": null
+  },
+  "surge": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 4.4057274456793835e-06,
+    "median_high_alarm_index": null
+  },
+  "clustered": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 6.107940322419145e-06,
+    "median_high_alarm_index": null
+  },
+  "zero_alarm": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 0.0,
+    "median_high_alarm_index": null
+  },
+  "hidden_rate": {
+    "low_detection_rate": 0.0,
+    "high_detection_rate": 0.0,
+    "mean_alarm_rate": 6.107940322419145e-06,
+    "median_high_alarm_index": null
+  }
+}

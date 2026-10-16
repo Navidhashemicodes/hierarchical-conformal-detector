@@ -1,0 +1,32 @@
+{
+  "100": {
+    "threshold": 0.08848800622668235,
+    "nominal_alarm_rate": 0.0,
+    "nominal_trajectory_alarm_rate": 0.0,
+    "replay_detection_rate": 0.0
+  },
+  "250": {
+    "threshold": 0.08162819661446119,
+    "nominal_alarm_rate": 0.0,
+    "nominal_trajectory_alarm_rate": 0.0,
+    "replay_detection_rate": 0.0
+  },
+  "500": {
+    "threshold": 0.0685483782707734,
+    "nominal_alarm_rate": 6.107940322419145e-06,
+    "nominal_trajectory_alarm_rate": 0.0,
+    "replay_detection_rate": 0.0
+  },
+  "750": {
+    "threshold": 0.06631487169577126,
+    "nominal_alarm_rate": 1.3717833183138079e-05,
+    "nominal_trajectory_alarm_rate": 0.0,
+    "replay_detection_rate": 0.0
+  },
+  "1000": {
+    "threshold": 0.05956361191167555,
+    "nominal_alarm_rate": 3.4044257534795235e-05,
+    "nominal_trajectory_alarm_rate": 0.0,
+    "replay_detection_rate": 0.0
+  }
+}

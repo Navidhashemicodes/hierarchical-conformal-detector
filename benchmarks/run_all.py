@@ -26,7 +26,6 @@ from hierarchical_conformal import (
     conformal_high_level_flags,
     conformal_high_level_delay,
     conformal_rank,
-    confidence_rank,
     conformal_threshold,
     ensure_dir,
     high_level_scores,
@@ -41,6 +40,7 @@ from hierarchical_conformal import (
 )
 from benchmarks.simulate import attack_measurements, make_mixing_matrix, nominal_deltas
 from benchmarks.output_paths import ROOT, RESULTS, FIGURES as PAPER_FIGURES, TABLES as PAPER_TABLES
+from benchmarks.publication_design import apply_baseline
 
 
 def parse_args() -> argparse.Namespace:
@@ -83,18 +83,7 @@ def parse_args() -> argparse.Namespace:
 
 def apply_publication_scale(args: argparse.Namespace) -> argparse.Namespace:
     if args.publication_scale:
-        args.steps = 10000
-        args.k_low = 500
-        args.window = 500
-        args.k_high = 50
-        args.n_train = max(args.n_train, 1000)
-        args.m_low = max(args.m_low, 24100)
-        args.m_high = max(args.m_high, 24100)
-        args.n_test = max(args.n_test, 1000)
-        args.delta1_low = 0.9995
-        args.delta1_high = 0.9995
-        args.ell_low = confidence_rank(args.m_low, args.delta1_low, 0.9995)
-        args.ell_high = confidence_rank(args.m_high, args.delta1_high, 0.9995)
+        args = apply_baseline(args)
     return args
 
 
@@ -168,8 +157,7 @@ def aligned_unfiltered_residuals(measurements: np.ndarray, estimator, args: argp
     return trim_filter_warmup(residuals, filter_warmup(args))
 
 
-def calibrate(args: argparse.Namespace, rng: np.random.Generator,
-              return_training_vectors: bool = False):
+def calibrate(args: argparse.Namespace, rng: np.random.Generator):
     mixing = make_mixing_matrix(args.dim, rng)
     train_y = measurements_from_deltas(nominal_deltas(args.n_train, args.steps, args.dim, rng, mixing=mixing))
     estimator = train_random_relu_estimator(
@@ -224,6 +212,8 @@ def calibrate(args: argparse.Namespace, rng: np.random.Generator,
         high_delta2=beta_confidence(args.delta1_high, ell_high, args.m_high),
     )
     artifacts = {
+        "low_model": low_model,
+        "high_model": high_model,
         "center": center,
         "q": q,
         "q_inv": q_inv,
@@ -239,10 +229,6 @@ def calibrate(args: argparse.Namespace, rng: np.random.Generator,
         "score_steps": score_steps,
         "mixing": mixing,
     }
-    if return_training_vectors:
-        artifacts.update(train_filtered=train_filtered,
-                         cal_low_filtered=cal_low_filtered,
-                         cal_high_filtered=cal_high_filtered)
     return estimator, summary, artifacts
 
 
@@ -470,7 +456,12 @@ def main():
     ensure_dir(RESULTS)
     rng = np.random.default_rng(args.seed)
 
-    estimator, summary, artifacts = calibrate(args, rng)
+    if args.publication_scale:
+        from benchmarks.streaming_pipeline import calibrate_five_batches
+        estimator, summary, artifacts = calibrate_five_batches(args, seed=args.seed)
+        rng = np.random.default_rng(args.seed + 999)
+    else:
+        estimator, summary, artifacts = calibrate(args, rng)
     records, eval_arrays = evaluate(args, estimator, summary, artifacts, rng)
     payload = {
         "args": vars(args),

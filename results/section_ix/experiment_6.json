@@ -1,0 +1,38 @@
+{
+  "status": "pending_publication_scale_run",
+  "method": "One observer drawn independently and uniformly at each window-completion time of every trajectory, including filter warmup; one low-level and one high-level detector.",
+  "publication_design": {
+    "steps": 10000,
+    "n_train_min": 24100,
+    "m_low": 24100,
+    "m_high": 24100,
+    "n_test": 1000,
+    "delta1_low": 0.9995,
+    "delta1_high": 0.9995,
+    "ell_low": 24098,
+    "ell_high": 24098,
+    "batches": 5
+  },
+  "diagnostic_smoke_test": {
+    "status": "passed",
+    "paper_result": false,
+    "config": {
+      "steps": 80,
+      "window": 5,
+      "n_train": 5,
+      "m_low": 8,
+      "m_high": 8,
+      "n_test": 5
+    }
+  },
+  "scenarios": {
+    "bias": null,
+    "drift": null,
+    "replay": null,
+    "noise_burst": null,
+    "surge": null,
+    "clustered": null,
+    "zero_alarm": null,
+    "hidden_rate": null
+  }
+}

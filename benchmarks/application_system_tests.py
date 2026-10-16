@@ -34,6 +34,7 @@ from hierarchical_conformal import (
     trim_filter_warmup,
 )
 from benchmarks.output_paths import ROOT, RESULTS, FIGURES as PAPER_FIGURES
+from benchmarks.publication_design import apply_application
 
 
 def parse_args():
@@ -45,6 +46,8 @@ def parse_args():
     parser.add_argument("--n-validation", type=int, default=400)
     parser.add_argument("--coverage", type=float, default=0.95)
     parser.add_argument("--delta1", type=float, default=0.995)
+    parser.add_argument("--ell", type=int, default=0,
+                        help="one-based calibration rank; 0 uses the marginal rank")
     parser.add_argument("--ridge", type=float, default=1e-6)
     parser.add_argument("--history", type=int, default=4)
     parser.add_argument("--hidden", type=int, default=64)
@@ -62,12 +65,7 @@ def parse_args():
 
 def apply_publication_scale(args):
     if args.publication_scale:
-        args.steps = 10000
-        args.n_train = max(args.n_train, 500)
-        args.m_calibration = max(args.m_calibration, 24100)
-        args.n_validation = max(args.n_validation, 1000)
-        args.coverage = 0.95
-        args.delta1 = 0.9995
+        args = apply_application(args)
     return args
 
 
@@ -186,10 +184,11 @@ def summarize_validation(distances, threshold, allowed, score_steps):
 def run_linear_residual_case(args, rng):
     train = linear_residuals(args.n_train, args.steps, rng)
     score_steps = args.steps
-    allowed = max(1, int(np.floor((1.0 - args.coverage) * score_steps)))
+    allowed = getattr(args, "k_low", None) or max(1, int(np.floor((1.0 - args.coverage) * score_steps)))
 
     cal = linear_residuals(args.m_calibration, args.steps, rng)
-    model = LowLevelDetector(allowed, args.delta1, ridge=args.ridge).fit(train, cal)
+    model = LowLevelDetector(allowed, args.delta1, getattr(args, "ell", 0) or None,
+                             ridge=args.ridge).fit(train, cal)
     center, q, q_inv = model.center_, model.shape_, model.inverse_
     ell, conf_threshold = model.rank_, model.threshold_
 
@@ -246,7 +245,7 @@ def run_nonlinear_filtered_residual_case(args, rng):
         filter_warmup(args),
     )
     score_steps = train_filtered.shape[1]
-    allowed = max(1, int(np.floor((1.0 - args.coverage) * score_steps)))
+    allowed = getattr(args, "k_low", None) or max(1, int(np.floor((1.0 - args.coverage) * score_steps)))
 
     cal_y = nonlinear_measurements(args.m_calibration, args.steps, rng)
     cal_res = residual_trajectories(cal_y, estimator, args.history)
@@ -254,7 +253,8 @@ def run_nonlinear_filtered_residual_case(args, rng):
         butterworth_lowpass(cal_res, args.filter_cutoff, args.filter_order),
         filter_warmup(args),
     )
-    model = LowLevelDetector(allowed, args.delta1, ridge=args.ridge).fit(
+    model = LowLevelDetector(allowed, args.delta1, getattr(args, "ell", 0) or None,
+                             ridge=args.ridge).fit(
         train_filtered, cal_filtered)
     center, q, q_inv = model.center_, model.shape_, model.inverse_
     ell, threshold = model.rank_, model.threshold_
@@ -304,10 +304,11 @@ def run_nonlinear_filtered_residual_case(args, rng):
     return metrics, violations
 
 
-def write_application_figure(results, distributions):
+def write_application_figure(results, distributions, output_path=None):
     if plt is None:
         return
-    ensure_dir(PAPER_FIGURES)
+    output_path = Path(output_path) if output_path is not None else PAPER_FIGURES / "application_linear_nonlinear.pdf"
+    ensure_dir(output_path.parent)
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.2))
 
     linear = results["linear_residual"]
@@ -328,7 +329,7 @@ def write_application_figure(results, distributions):
     axes[1].set_ylabel("validation trajectories")
 
     fig.tight_layout()
-    fig.savefig(PAPER_FIGURES / "application_linear_nonlinear.pdf")
+    fig.savefig(output_path)
     plt.close(fig)
 
 

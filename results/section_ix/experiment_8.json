@@ -1,0 +1,17 @@
+{
+  "experiment": "CoDiT GAIT case study comparison",
+  "status": "pending_shared_subject_split_run",
+  "dataset": "PhysioNet Gait in Neurodegenerative Disease Database (GAITND)",
+  "codit_reference": {
+    "source": "Kaur et al., CODiT, ICCPS 2023, Table 4",
+    "metric": "window-level AUROC, percent, all patient groups combined",
+    "window_lengths": [16, 18, 20],
+    "published_auroc": [83.71, 87.01, 86.57]
+  },
+  "hierarchical_detector": {
+    "auroc": [null, null, null],
+    "status": "not_run",
+    "reason": "Dataset and official CoDiT implementation have not been staged for a shared subject split."
+  },
+  "protocol_note": "Descriptive AUROC comparison only. The available healthy subjects are insufficient for the manuscript's 24,100 independent-trajectory calibration design, so this case study does not claim that conformal guarantee."
+}

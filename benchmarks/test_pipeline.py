@@ -1,6 +1,7 @@
 """Focused checks of the trajectory and window-position implementations."""
 
 import unittest
+from argparse import Namespace
 import numpy as np
 
 from hierarchical_conformal import confidence_rank, fit_random_relu
@@ -9,9 +10,50 @@ from hierarchical_conformal.utils import butterworth_lowpass, trim_filter_warmup
 from benchmarks.simulate import attack_measurements
 from benchmarks.window_ensemble import (default_config, fit_ensemble,
                                         measurements, score_ensemble)
+from benchmarks.streaming_pipeline import randomized_window_vectors
+from benchmarks.publication_design import (apply_application, apply_baseline,
+                                           apply_ensemble, check_design)
 
 
 class PipelineTests(unittest.TestCase):
+    def test_randomized_window_observer_is_drawn_at_each_time_step(self):
+        class ConstantObserver:
+            def __init__(self, value):
+                self.value = value
+
+            def predict_flat(self, features):
+                return np.full((len(features), 1), self.value)
+
+        values = np.zeros((4, 20, 1))
+        observers = [ConstantObserver(value) for value in (1., 2., 3.)]
+        config = {"window": 3, "filter_cutoff": 0.2,
+                  "filter_order": 2, "warmup": 2}
+        residuals, choices = randomized_window_vectors(
+            values, observers, config, np.random.default_rng(11))
+        self.assertEqual(choices.shape, (4, 18))
+        self.assertEqual(residuals.shape, (4, 16, 1))
+        self.assertTrue(all(np.unique(row).size > 1 for row in choices))
+        self.assertEqual(set(np.unique(choices)), {0, 1, 2})
+
+    def test_publication_design_uses_full_trajectories_and_training_count(self):
+        self.assertGreaterEqual(check_design(), 0.9995)
+        baseline = apply_baseline(Namespace(n_train=60, m_low=200, m_high=200,
+            n_test=80, steps=300, k_low=5, window=20, k_high=2,
+            delta1_low=0.9, delta1_high=0.9, ell_low=0, ell_high=0))
+        application = apply_application(Namespace(n_train=60, m_calibration=200,
+            n_validation=80, steps=300, delta1=0.9, coverage=0.95))
+        ensemble = apply_ensemble(default_config())
+        for config in (vars(baseline), vars(application), ensemble):
+            self.assertEqual(config["steps"], 10000)
+            self.assertGreaterEqual(config["n_train"], 24100)
+        for config in (vars(baseline), ensemble):
+            self.assertEqual(config["m_low"], 24100)
+            self.assertEqual(config["m_high"], 24100)
+            self.assertEqual(config["ell_low"], 24098)
+            self.assertEqual(config["ell_high"], 24098)
+        self.assertEqual(application.m_calibration, 24100)
+        self.assertEqual(application.ell, 24098)
+
     def test_publication_rank_matches_stated_example(self):
         self.assertEqual(confidence_rank(24100, 0.9995, 0.9995), 24098)
 

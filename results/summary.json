@@ -1,0 +1,324 @@
+{
+  "args": {
+    "seed": 7,
+    "dim": 3,
+    "steps": 300,
+    "n_train": 60,
+    "m_low": 200,
+    "m_high": 200,
+    "n_test": 80,
+    "k_low": 5,
+    "window": 20,
+    "k_high": 2,
+    "delta1_low": 0.9,
+    "delta1_high": 0.9,
+    "ridge": 1e-05,
+    "history": 4,
+    "hidden": 32,
+    "filter_order": 3,
+    "filter_cutoff": 0.08,
+    "filter_warmup": -1,
+    "k_ablation_values": "1,25,50,100,200,500",
+    "publication_scale": false
+  },
+  "score_pipeline": "y_t -> y_obs,t=f_theta(history) -> e_t=y_t-y_obs,t -> Butterworth low-pass -> conformal low/high detectors",
+  "calibration": {
+    "low_threshold": 29.585028151180197,
+    "low_rank": 181,
+    "low_delta1": 0.9,
+    "low_delta2": 0.5344615291741031,
+    "high_threshold": 0.15,
+    "high_quiet_threshold": 1.0,
+    "high_rank": 181,
+    "high_delta1": 0.9,
+    "high_delta2": 0.5344615291741031
+  },
+  "filtered_residual_mean": [
+    0.0035536529301392256,
+    -0.007425272916998054,
+    -0.021429796371744483
+  ],
+  "filtered_residual_q": [
+    [
+      17.42984437152393,
+      -1.2532417822139728,
+      -1.2940249180967578
+    ],
+    [
+      -1.2532417822139728,
+      2.8710647225516936,
+      0.7250124945931437
+    ],
+    [
+      -1.2940249180967578,
+      0.7250124945931437,
+      6.341118289135822
+    ]
+  ],
+  "unfiltered_residual_mean": [
+    -0.02710722812217087,
+    -0.03656560416058451,
+    -0.029567547523862783
+  ],
+  "unfiltered_residual_q": [
+    [
+      53.329332178643746,
+      -2.2653388069803917,
+      -5.6197304590466475
+    ],
+    [
+      -2.2653388069803917,
+      7.042280448799789,
+      1.3109062012078094
+    ],
+    [
+      -5.6197304590466475,
+      1.3109062012078094,
+      23.414652878190918
+    ]
+  ],
+  "metrics": {
+    "nominal": {
+      "score_source": "Butterworth-filtered neural-observer residual y_t-y_obs_t",
+      "score_steps": 287,
+      "filter_warmup": 9,
+      "epsilon_low": 0.09999999999999998,
+      "ell_low": 181,
+      "m_low": 200,
+      "epsilon_high": 0.09999999999999998,
+      "ell_high": 181,
+      "m_high": 200,
+      "low_coverage": 0.9125,
+      "mean_alarm_rate": 0.008057491289198606,
+      "p95_alarm_rate": 0.03867595818815329,
+      "fraction_within_alarm_budget": 0.925,
+      "nominal_low_decision_rate": 0.075,
+      "conformal_high_false_alarm": 0.1,
+      "conformal_quiet_high_false_alarm": 0.0,
+      "conformal_two_sided_high_false_alarm": 0.1,
+      "mean_high_score": 0.058750000000000004
+    },
+    "filtered_vs_unfiltered": {
+      "filtered_low_coverage": 0.9125,
+      "filtered_mean_alarm_rate": 0.008057491289198606,
+      "unfiltered_low_coverage": 0.8875,
+      "unfiltered_mean_alarm_rate": 0.008144599303135889,
+      "unfiltered_low_threshold": 24.011289179080595
+    },
+    "k_ablation": {
+      "1": {
+        "threshold": 30.914187729472445,
+        "nominal_low_coverage": 0.9,
+        "mean_alarm_rate": 0.006837979094076655,
+        "p95_alarm_rate": 0.035191637630662,
+        "clustered_low_detection_rate": 0.1
+      },
+      "25": {
+        "threshold": 17.446639840743508,
+        "nominal_low_coverage": 0.9,
+        "mean_alarm_rate": 0.029573170731707316,
+        "p95_alarm_rate": 0.1404181184668989,
+        "clustered_low_detection_rate": 0.1125
+      },
+      "50": {
+        "threshold": 12.105025921577766,
+        "nominal_low_coverage": 0.9,
+        "mean_alarm_rate": 0.059886759581881534,
+        "p95_alarm_rate": 0.2705574912891985,
+        "clustered_low_detection_rate": 0.0875
+      },
+      "100": {
+        "threshold": 6.640362751818934,
+        "nominal_low_coverage": 0.9125,
+        "mean_alarm_rate": 0.1584494773519164,
+        "p95_alarm_rate": 0.48763066202090577,
+        "clustered_low_detection_rate": 0.075
+      },
+      "200": {
+        "threshold": 2.2390064889412384,
+        "nominal_low_coverage": 0.9,
+        "mean_alarm_rate": 0.510191637630662,
+        "p95_alarm_rate": 0.8506968641114983,
+        "clustered_low_detection_rate": 0.1
+      }
+    },
+    "scenarios": {
+      "bias": {
+        "mean_low_alarm_rate": 0.008318815331010454,
+        "low_detection_rate": 0.075,
+        "filtered_low_detection_rate": 0.075,
+        "unfiltered_low_detection_rate": 0.1125,
+        "conformal_detection_rate": 0.125,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.125,
+        "conformal_delay": {
+          "detection_rate": 0.125,
+          "mean_delay": 196.7,
+          "median_delay": 189.0,
+          "p90_delay": 255.4
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.06187499999999999
+      },
+      "drift": {
+        "mean_low_alarm_rate": 0.0078397212543554,
+        "low_detection_rate": 0.075,
+        "filtered_low_detection_rate": 0.075,
+        "unfiltered_low_detection_rate": 0.1125,
+        "conformal_detection_rate": 0.1,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.1,
+        "conformal_delay": {
+          "detection_rate": 0.1,
+          "mean_delay": 194.75,
+          "median_delay": 189.0,
+          "p90_delay": 240.7
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.058750000000000004
+      },
+      "replay": {
+        "mean_low_alarm_rate": 0.0210801393728223,
+        "low_detection_rate": 0.375,
+        "filtered_low_detection_rate": 0.375,
+        "unfiltered_low_detection_rate": 0.4375,
+        "conformal_detection_rate": 0.3625,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.3625,
+        "conformal_delay": {
+          "detection_rate": 0.3625,
+          "mean_delay": 131.51724137931035,
+          "median_delay": 131.0,
+          "p90_delay": 133.2
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.15
+      },
+      "noise_burst": {
+        "mean_low_alarm_rate": 0.007970383275261323,
+        "low_detection_rate": 0.075,
+        "filtered_low_detection_rate": 0.075,
+        "unfiltered_low_detection_rate": 0.2,
+        "conformal_detection_rate": 0.0875,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.0875,
+        "conformal_delay": {
+          "detection_rate": 0.0875,
+          "mean_delay": 191.42857142857142,
+          "median_delay": 171.0,
+          "p90_delay": 244.60000000000002
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.057499999999999996
+      },
+      "surge": {
+        "mean_low_alarm_rate": 0.008231707317073171,
+        "low_detection_rate": 0.075,
+        "filtered_low_detection_rate": 0.075,
+        "unfiltered_low_detection_rate": 0.1125,
+        "conformal_detection_rate": 0.1,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.1,
+        "conformal_delay": {
+          "detection_rate": 0.1,
+          "mean_delay": 195.0,
+          "median_delay": 189.5,
+          "p90_delay": 240.7
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.058125
+      },
+      "clustered": {
+        "mean_low_alarm_rate": 0.008013937282229966,
+        "low_detection_rate": 0.075,
+        "filtered_low_detection_rate": 0.075,
+        "unfiltered_low_detection_rate": 0.1125,
+        "conformal_detection_rate": 0.1,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.1,
+        "conformal_delay": {
+          "detection_rate": 0.1,
+          "mean_delay": 194.75,
+          "median_delay": 189.0,
+          "p90_delay": 240.7
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.057499999999999996
+      },
+      "zero_alarm": {
+        "mean_low_alarm_rate": 0.00021777003484320557,
+        "low_detection_rate": 0.0,
+        "filtered_low_detection_rate": 0.0,
+        "unfiltered_low_detection_rate": 0.0375,
+        "conformal_detection_rate": 0.0,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.0,
+        "conformal_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.003125
+      },
+      "hidden_rate": {
+        "mean_low_alarm_rate": 0.008101045296167248,
+        "low_detection_rate": 0.0875,
+        "filtered_low_detection_rate": 0.0875,
+        "unfiltered_low_detection_rate": 0.1125,
+        "conformal_detection_rate": 0.0875,
+        "conformal_quiet_detection_rate": 0.0,
+        "conformal_two_sided_detection_rate": 0.0875,
+        "conformal_delay": {
+          "detection_rate": 0.0875,
+          "mean_delay": 191.14285714285714,
+          "median_delay": 171.0,
+          "p90_delay": 244.60000000000002
+        },
+        "conformal_quiet_delay": {
+          "detection_rate": 0.0,
+          "mean_delay": null,
+          "median_delay": null,
+          "p90_delay": null
+        },
+        "mean_high_score": 0.059375
+      }
+    }
+  }
+}

@@ -15,6 +15,7 @@ import numpy as np
 
 from hierarchical_conformal import RandomFeatureObserver, WindowEnsembleDetector
 from benchmarks.simulate import attack_measurements, make_mixing_matrix, nominal_deltas
+from benchmarks.publication_design import apply_ensemble
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,7 +42,9 @@ def fit_ensemble(config, rng):
     model = WindowEnsembleDetector(
         window=window, k_low=config["k_low"], rate_window=window,
         k_high=config["k_high"], delta1_low=config["delta1_low"],
-        delta1_high=config["delta1_high"], ridge=config["ridge"],
+        delta1_high=config["delta1_high"],
+        ell_low=config.get("ell_low"), ell_high=config.get("ell_high"),
+        ridge=config["ridge"],
         filter_cutoff=config["filter_cutoff"], filter_order=config["filter_order"],
         warmup=warmup, max_training_pairs=config["max_training_pairs"], rng=rng,
         observer_factory=lambda position: RandomFeatureObserver(
@@ -109,17 +112,20 @@ def run_ensemble_experiment(config, seed=17):
     return summary
 
 
-def save_ensemble_results(summary, root=ROOT):
+def save_ensemble_results(summary, root=ROOT, results_dir=None,
+                          figures_dir=None, tables_dir=None):
     root = Path(root)
-    if (root / "paper" / "main.tex").is_file():
-        results_dir = root / "results"
-        figures_dir = root / "paper" / "figures"
-        tables_dir = root / "paper" / "tables"
-    else:
-        output_dir = root / "benchmarks" / "outputs"
-        results_dir = output_dir / "results"
-        figures_dir = output_dir / "figures"
-        tables_dir = output_dir / "tables"
+    if results_dir is None or figures_dir is None or tables_dir is None:
+        if (root / "paper" / "main.tex").is_file():
+            results_dir = root / "results"
+            figures_dir = root / "paper" / "figures"
+            tables_dir = root / "paper" / "tables"
+        else:
+            output_dir = root / "benchmarks" / "outputs"
+            results_dir = output_dir / "results"
+            figures_dir = output_dir / "figures"
+            tables_dir = output_dir / "tables"
+    results_dir, figures_dir, tables_dir = map(Path, (results_dir, figures_dir, tables_dir))
     for directory in (results_dir, figures_dir, tables_dir):
         directory.mkdir(parents=True, exist_ok=True)
     (results_dir / "window_ensemble.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
@@ -172,10 +178,13 @@ def main():
     parser.add_argument("--m-low", type=int, default=120)
     parser.add_argument("--m-high", type=int, default=120)
     parser.add_argument("--n-test", type=int, default=80)
+    parser.add_argument("--publication-scale", action="store_true")
     args = parser.parse_args()
     config = default_config()
     for key in ("steps", "window", "n_train", "m_low", "m_high", "n_test"):
         config[key] = getattr(args, key)
+    if args.publication_scale:
+        config = apply_ensemble(config)
     summary = run_ensemble_experiment(config, args.seed)
     save_ensemble_results(summary)
     print(json.dumps({"nominal": summary["nominal"],
