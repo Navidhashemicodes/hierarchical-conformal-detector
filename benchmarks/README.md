@@ -17,6 +17,12 @@ Experiments 1-7: `T=10000`, at least 24,100 training trajectories,
 calibration trajectories where that level is used. The rank is `ell=24098`
 at `delta1=0.9995`, yielding `delta2` approximately `0.99950047`. In Experiment 6, the five window-position observers are trained on the proper training set. For every trajectory, an observer is drawn independently and uniformly at each window-completion time; the selected residual stream is filtered before the warmup is discarded. One low-level ellipsoid and one high-level detector are calibrated from separate trajectory sets using the same randomization law. Their conformal guarantees are marginal over the observer draws. The former majority-vote pilot outputs have been cleared; Experiment 6 publication-scale results are pending.
 
+Experiment 7's publication-scale design is implemented in the application
+runner. The checked-in `results/section_ix/experiment_7.json` contains only a
+diagnostic pilot (`T=300`, 60 training trajectories, and 200 calibration
+trajectories); publication-scale results are pending. Do not interpret those
+pilot values as results from the `T=10000`, 24,100-trajectory design.
+
 Experiment 8 specifies an exploratory comparison with CoDiT on the GAIT case study. Published CoDiT AUROC values are recorded; our detector values remain pending until the PhysioNet GAITND records and official CoDiT implementation are run under a shared subject split. Since the dataset has only 16 healthy subjects, this comparison cannot use the 24,100-independent-trajectory calibration design or claim its conformal guarantee. It must report AUROC as descriptive performance and preserve subject-level separation.
 
 The reusable in-memory API for the paper's randomized observer rule is
