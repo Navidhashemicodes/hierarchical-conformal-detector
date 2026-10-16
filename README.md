@@ -118,7 +118,10 @@ into the benchmark output folders.
 The separate `section_ix_pilot.ipynb` uses small datasets and writes only to
 `benchmarks/outputs/pilot/`; its numbers are not paper results. See
 [benchmarks/README.md](benchmarks/README.md) for output locations and run
-details.
+details. Files already present under `benchmarks/outputs/` are generated
+artifacts from earlier runs, not authoritative publication results; regenerate
+them with the commands above before using them. The publication status and
+archived results, where available, are listed under `results/section_ix/`.
 
 For a small implementation check, run
 `python -m benchmarks.run_section_ix_notebook --pilot`.

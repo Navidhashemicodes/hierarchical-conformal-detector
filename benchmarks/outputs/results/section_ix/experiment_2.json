@@ -1,8 +1,0 @@
-{
-  "high_threshold": 0.15,
-  "empirical_coverage": 0.9,
-  "false_alarm_rate": 0.1,
-  "mean_score": 0.058750000000000004,
-  "window": 20,
-  "k_high": 2
-}

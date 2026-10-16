@@ -1,5 +1,0 @@
-{
-  "status": "superseded_majority_vote_pilot",
-  "message": "No randomized-observer pilot result has been recorded. The current notebook cell runs the randomized method when executed.",
-  "observer_sampling": "independent uniform draw at every valid time step of every trajectory"
-}

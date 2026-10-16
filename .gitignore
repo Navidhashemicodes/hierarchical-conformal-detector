@@ -9,6 +9,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+benchmarks/outputs/
 
 # Notebook and LaTeX intermediates
 .ipynb_checkpoints/
